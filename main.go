@@ -1,118 +1,62 @@
 package main
 
 import (
-	"database/sql"
-	"net/http"
-
-	"github.com/labstack/echo"
-	_ "github.com/mattn/go-sqlite3"
+	"bufio"
+	"fmt"
+	"io"
+	"os"
+	"time"
 )
 
-type Paciente struct {
-	Nome  string `json:"nome"`
-	Idade int    `json:"idade"`
-	Email string `json:"email"`
-	Endereco
-}
-
-type Endereco struct {
-	Rua    string `json:"rua"`
-	Numero int    `json:"numero"`
-	Cidade string `json:"cidade"`
-	Bairro string `json:"bairro"`
-}
-type Car struct {
-	Nome  string `json:"nome"`
-	Marca string `json:"marca"`
-}
-
-var cars []Car
-var pacientes []Paciente
-
-func createPaciente() {
-	pacientes = append(pacientes, Paciente{"Marcelo", 46, "marcelolynx@gmail.com", Endereco{"Rua 1", 123, "São Paulo", "Vila Mariana"}})
-}
-
-func createCars() {
-	cars = append(cars, Car{"Gol", "Volkswagen"})
-	cars = append(cars, Car{"Uno", "Fiat"})
-	cars = append(cars, Car{"Celta", "Chevrolet"})
-}
-
 func main() {
-	createCars()
-	createPaciente()
-	e := echo.New()
-	e.GET("/cars", getCars)
-	e.POST("/cars", postCars)
-	e.GET("/pacientes", getPacientes)
-	e.POST("/pacientes", postPacientes)
-	e.Logger.Fatal(e.Start(":8080"))
-}
-
-func getCars(c echo.Context) error {
-	return c.JSON(http.StatusOK, cars)
-}
-
-func getPacientes(c echo.Context) error {
-	return c.JSON(http.StatusOK, pacientes)
-}
-
-func postCars(c echo.Context) error {
-	car := new(Car)
-	if err := c.Bind(car); err != nil {
-		return err
-	}
-	cars = append(cars, *car)
-	saveCar(*car)
-	return c.JSON(http.StatusCreated, car)
-}
-
-func postPacientes(c echo.Context) error {
-	paciente := new(Paciente)
-	if err := c.Bind(paciente); err != nil {
-		return err
-	}
-	pacientes = append(pacientes, *paciente)
-	savePaciente(*paciente)
-	return c.JSON(http.StatusCreated, paciente)
-}
-
-func savePaciente(paciente Paciente) error {
-	db, err := sql.Open("sqlite3", "./cars.db")
+	f, err := os.Create("test.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
-	defer db.Close()
+	fmt.Println("Arquivo criado com sucesso")
 
-	stmt, err := db.Prepare("INSERT INTO pacientes(nome, idade, email, rua,  cidade, bairro) values($1, $2, $3, $4, $5, $6)")
+	time.Sleep(8 * time.Second)
+
+	tamanho, err := f.WriteString("Hello World!")
 	if err != nil {
-		return err
+		panic(err)
 	}
-	_, err = stmt.Exec(paciente.Nome, paciente.Idade, paciente.Email, paciente.Rua, paciente.Cidade, paciente.Bairro)
+
+	println(tamanho, "bytes written successfully")
+	f.Close()
+
+	// Lendo o arquivo
+	arquivo, err := os.ReadFile("test.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
+	fmt.Println(string(arquivo))
 
-	return nil
-}
+	time.Sleep(8 * time.Second)
 
-func saveCar(car Car) error {
-	db, err := sql.Open("sqlite3", "./cars.db")
+	// Lendo o arquivo linha a linha
+	arquivo2, err := os.Open("test.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
-	defer db.Close()
+	reader := bufio.NewReader(arquivo2)
+	buffer := make([]byte, 4)
+	for {
+		n, err := reader.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			panic(err)
+		}
+		fmt.Println(string(buffer[:n]))
+	}
 
-	stmt, err := db.Prepare("INSERT INTO cars(nome, marca) values($1, $2)")
+	time.Sleep(8 * time.Second)
+
+	err = os.Remove("test.txt")
 	if err != nil {
-		return err
+		panic(err)
 	}
-
-	_, err = stmt.Exec(car.Nome, car.Marca)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	fmt.Println("Arquivo removido com sucesso")
 }
