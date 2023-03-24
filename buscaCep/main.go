@@ -22,8 +22,8 @@ type viaCep struct {
 }
 
 func main() {
-	for _, url := range os.Args[1:] {
-		req, err := http.Get(url)
+	for _, cep := range os.Args[1:] {
+		req, err := http.Get("http://viacep.com.br/ws/" + cep + "/json/")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Erro ao fazer requisição: %v\n", err)
 		}
@@ -38,6 +38,13 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Erro ao fazer o unmarshal: %v\n", err)
 		}
+
+		file, err := os.Create("cep.json")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Erro ao criar o arquivo: %v\n", err)
+		}
+		defer file.Close()
+		_, err = file.WriteString(fmt.Sprintf("CEP: %s, localidade: %s, UF %s", data.Cep, data.Localidade, data.Uf))
 		fmt.Println(data)
 
 	}
