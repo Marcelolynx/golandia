@@ -8,33 +8,25 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "mco02jgp"
-	dbname   = "goexpert"
-)
-
-type Product struct {
+type Patient struct {
 	ID    string
 	Name  string
-	Price float64
+	Phone string
+	Email string
 }
 
-func NewProduct(name string, price float64) *Product {
-	return &Product{
+func NewPatients(name string, phone string, email string) *Patient {
+	return &Patient{
 		ID:    uuid.New().String(),
 		Name:  name,
-		Price: price,
+		Phone: phone,
+		Email: email,
 	}
 }
 
 func main() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-	db, err := sql.Open("postgres", psqlInfo)
+	connStr := "user=postgres dbname=goexpert password=mco02jgp host=localhost port=5432 sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}
@@ -47,21 +39,21 @@ func main() {
 
 	fmt.Println("Successfully connected!")
 
-	product := NewProduct("Notebook", 1899.90)
-	err = insertProduct(db, product)
+	patients := NewPatients("Marcelo Oliveira", "67992322024", "marcelolynx@gmail.com")
+	err = insertPacient(db, patients)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func insertProduct(db *sql.DB, product *Product) error {
-	stmt, err := db.Prepare("INSERT INTO PRODUCTS (name, price) VALUES ($1, $2)")
+func insertPacient(db *sql.DB, pacient *Patient) error {
+	stmt, err := db.Prepare("INSERT INTO patients (name, phone, email) VALUES ($1, $2, $3)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(product.Name, product.Price)
+	_, err = stmt.Exec(pacient.Name, pacient.Phone, pacient.Email)
 	if err != nil {
 		panic(err)
 	}
