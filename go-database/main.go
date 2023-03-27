@@ -39,23 +39,24 @@ func main() {
 
 	fmt.Println("Successfully connected!")
 
-	/* patients := NewPatients("Ademir Maldonado", "67984319090", "ademiradcem@gmail.com")
+	patients := NewPatients("Ademir Maldonado", "67984319090", "ademiradcem@gmail.com")
 	err = insertPacient(db, patients)
 	if err != nil {
 		panic(err)
-	} */
-	/* patients.Phone = "67999005511"
+	}
+
+	patients.Phone = "67999005511"
 	err = updatePatients(db, patients)
 	if err != nil {
 		panic(err)
-	} */
+	}
 
-	/* patient, err := selectOnePatient(db, patients.ID)
+	patient, err := selectOnePatient(db, patients.ID)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(patient.Name + " Inserted successfully!")
-	*/
+
 	patientsList, err := selectAllPatients(db)
 	if err != nil {
 		panic(err)
@@ -64,6 +65,12 @@ func main() {
 	for _, p := range patientsList {
 		fmt.Println(p.Name, p.Phone, p.Email)
 	}
+
+	err = deletePatient(db, patient.ID)
+	if err != nil {
+		panic(err)
+	}
+
 }
 
 func insertPacient(db *sql.DB, pacient *Patient) error {
@@ -128,4 +135,19 @@ func selectAllPatients(db *sql.DB) ([]Patient, error) {
 		patients = append(patients, p)
 	}
 	return patients, nil
+}
+
+func deletePatient(db *sql.DB, id string) error {
+	stmt, err := db.Prepare("DELETE FROM patients WHERE id = $1")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(id)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Product successfully deleted!")
+	return nil
 }
